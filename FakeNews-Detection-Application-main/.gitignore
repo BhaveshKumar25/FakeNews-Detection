@@ -1,0 +1,16 @@
+venv/
+.venv/
+
+__pycache__/
+*.pyc
+
+.vscode/
+.idea/
+
+.env
+*.log
+
+data/*.db
+*.db
+.pytest_cache/
+_backup_original/

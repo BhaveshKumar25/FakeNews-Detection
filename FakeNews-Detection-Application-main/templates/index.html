@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI-powered Fake News Detection using TF-IDF and Logistic Regression with explainability, source verification, fact-checking, and Hindi support.">
+    <title>FakeNews AI - Advanced News Verification</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/enhanced.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
+</head>
+<body>
+    <div id="cursorGlow"></div>
+    <div class="background"></div>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="logo">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="FakeNews AI Logo">
+            <h2>FakeNews <span>AI</span></h2>
+        </div>
+
+        <ul>
+            <li><a href="#" data-i18n="nav_home">Home</a></li>
+            <li><a href="#features" data-i18n="nav_features">Features</a></li>
+            <li><a href="#stats" data-i18n="nav_stats">Statistics</a></li>
+            <li><a href="#history" data-i18n="nav_history">History</a></li>
+            <li><a href="#about" data-i18n="nav_about">About</a></li>
+        </ul>
+
+        <div class="navControls">
+            <!-- Language Selector (Feature 1) -->
+            <button id="langToggleBtn" class="controlBtn" onclick="toggleLanguage()" title="Switch Language / भाषा बदलें" aria-label="Toggle Language">
+                <i class="fa-solid fa-language"></i>
+                <span id="langBtnText">हिन्दी</span>
+            </button>
+
+            <!-- Simple Language Mode Toggle (Feature 8) -->
+            <button id="modeToggleBtn" class="controlBtn" onclick="toggleSimpleMode()" title="Toggle Simple / Detailed Explanations" aria-label="Toggle Simple Mode">
+                <i class="fa-solid fa-book-open-reader"></i>
+                <span id="modeBtnText">Simple Mode: ON</span>
+            </button>
+
+            <!-- Theme Toggle -->
+            <button class="themeBtn" aria-label="Toggle Dark/Light Theme" title="Toggle Theme (Alt+T)">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+
+            <!-- Keyboard Shortcuts Button (Shneiderman Rule 2) -->
+            <button id="shortcutsBtn" class="controlBtn" onclick="toggleShortcutsModal()" title="Keyboard Shortcuts (? or Alt+K)" aria-label="Keyboard Shortcuts">
+                <i class="fa-solid fa-keyboard"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="heroContent">
+            <div class="heroText">
+                <h1 data-i18n="hero_title">
+                    Detect Fake News
+                    <span>Using Machine Learning</span>
+                </h1>
+                <p data-i18n="hero_subtitle">
+                    Transparent, explainable fake news analysis powered by TF-IDF, Logistic Regression, multi-language support, and verified fact-checking sources.
+                </p>
+
+                <div class="badges">
+                    <div class="badge">
+                        <i class="fa-solid fa-brain"></i>
+                        <span data-i18n="badge_ai">AI Powered</span>
+                    </div>
+                    <div class="badge">
+                        <i class="fa-solid fa-microchip"></i>
+                        <span data-i18n="badge_pipeline">TF-IDF + Logistic Regression</span>
+                    </div>
+                    <div class="badge">
+                        <i class="fa-solid fa-language"></i>
+                        <span data-i18n="badge_multilingual">English + Hindi Support</span>
+                    </div>
+                    <div class="badge">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span data-i18n="badge_accuracy">97.3% Model Accuracy</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- News Analyzer Card -->
+            <div class="glass analyzerCard">
+                <h2 data-i18n="analyzer_heading">
+                    <i class="fa-solid fa-newspaper"></i>
+                    Analyze News Content
+                </h2>
+
+                <!-- Input Tabs (Text / URL / OCR) -->
+                <div class="inputTabs" role="tablist">
+                    <button class="tabBtn active" id="tabBtnText" onclick="switchInputTab('text')" role="tab" aria-selected="true" title="Shortcut: Alt+1">
+                        <i class="fa-solid fa-align-left"></i>
+                        <span data-i18n="tab_text">Direct Text</span>
+                        <kbd class="tabShortcut">Alt+1</kbd>
+                    </button>
+                    <button class="tabBtn" id="tabBtnUrl" onclick="switchInputTab('url')" role="tab" aria-selected="false" title="Shortcut: Alt+2">
+                        <i class="fa-solid fa-link"></i>
+                        <span data-i18n="tab_url">News URL</span>
+                        <kbd class="tabShortcut">Alt+2</kbd>
+                    </button>
+                    <button class="tabBtn" id="tabBtnOcr" onclick="switchInputTab('ocr')" role="tab" aria-selected="false" title="Shortcut: Alt+3">
+                        <i class="fa-solid fa-image"></i>
+                        <span data-i18n="tab_ocr">Screenshot OCR</span>
+                        <kbd class="tabShortcut">Alt+3</kbd>
+                    </button>
+                </div>
+
+                <!-- TAB 1: Direct Text Input -->
+                <div id="tabText" class="tabPane active">
+                    <textarea id="news" maxlength="15000" placeholder="Paste complete news article or headline here (English or हिन्दी)..." aria-label="News text to analyze"></textarea>
+                </div>
+
+                <!-- TAB 2: News URL Input (Feature 2) -->
+                <div id="tabUrl" class="tabPane">
+                    <div class="urlInputGroup">
+                        <input type="url" id="urlInput" placeholder="https://example.com/news/article-headline" aria-label="News URL input">
+                        <button class="subActionBtn" onclick="fetchArticleUrl()">
+                            <i class="fa-solid fa-cloud-arrow-down"></i>
+                            <span data-i18n="btn_fetch_url">Fetch Article</span>
+                        </button>
+                    </div>
+                    <div id="urlPreviewCard" class="urlPreviewBox" style="display:none;">
+                        <div><strong>Title:</strong> <span id="urlPreviewTitle">-</span></div>
+                        <div><strong>Domain:</strong> <span id="urlPreviewDomain">-</span></div>
+                        <div><strong>Published:</strong> <span id="urlPreviewDate">-</span></div>
+                        <div style="margin-top:6px; color:#ffb300; font-size:12px;">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <span data-i18n="url_https_note">Note: HTTPS secures the connection, but does not guarantee the truthfulness of the article.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: Screenshot OCR Input (Feature 3) -->
+                <div id="tabOcr" class="tabPane">
+                    <div class="ocrDropZone" id="dropZone" onclick="document.getElementById('imageFileInput').click()">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <p id="ocrDropText" data-i18n="ocr_drop_text">Click or Drag & Drop a news screenshot (PNG, JPG, JPEG up to 5MB)</p>
+                        <input type="file" id="imageFileInput" accept="image/png,image/jpeg,image/jpg" style="display:none;" onchange="handleFileSelect(event)">
+                    </div>
+
+                    <div class="ocrControls">
+                        <label for="ocrLangSelect" style="font-size:13px;" data-i18n="ocr_lang_label">OCR Language:</label>
+                        <select id="ocrLangSelect" class="ocrSelect">
+                            <option value="eng">English (eng)</option>
+                            <option value="eng+hin">English + Hindi (eng+hin)</option>
+                        </select>
+                        <button class="subActionBtn" onclick="runOcrUpload()">
+                            <i class="fa-solid fa-file-lines"></i>
+                            <span data-i18n="btn_ocr_extract">Extract Text</span>
+                        </button>
+                    </div>
+
+                    {% if not ocr_ready %}
+                    <div class="alertBanner alertUncertain" style="margin-top:8px; font-size:12px;">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>
+                            <strong>Tesseract OCR Notice:</strong>
+                            Tesseract OCR engine is not detected in your system PATH. Screenshot OCR requires installing Tesseract. You can still paste text directly!
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="textInfo">
+                    <span id="charCount">0 / 15000 Characters</span>
+                    <button class="copyBtn" onclick="pasteExample()">
+                        <i class="fa-solid fa-paste"></i>
+                        <span data-i18n="btn_example">Use Example</span>
+                    </button>
+                </div>
+
+                <div class="buttons">
+                    <button id="analyzeBtn" onclick="predictNews()" aria-keyshortcuts="Control+Enter" title="Analyze News (Ctrl+Enter)">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span data-i18n="btn_analyze">Analyze News</span>
+                        <kbd class="kbdShortcut">Ctrl+Enter</kbd>
+                    </button>
+                    <button id="clearBtn" onclick="clearText()" aria-keyshortcuts="Escape" title="Clear Inputs (Esc)">
+                        <i class="fa-solid fa-trash"></i>
+                        <span data-i18n="btn_clear">Clear</span>
+                        <kbd class="kbdShortcut">Esc</kbd>
+                    </button>
+                </div>
+
+                <!-- Loading Indicator -->
+                <div id="loader" class="loader" role="status" aria-live="polite">
+                    <div class="spinner"></div>
+                    <span id="loaderText" data-i18n="loader_analyzing">Analyzing using AI...</span>
+                </div>
+
+                <!-- RESULT CARD -->
+                <div id="resultCard" class="resultCard" style="display:none;">
+
+                    <!-- Result Header -->
+                    <div class="resultHeader">
+                        <i id="predictionIcon" class="fa-solid fa-circle-check realIcon"></i>
+                        <h2 id="predictionLabel">REAL NEWS</h2>
+                    </div>
+
+                    <!-- Uncertainty Warning Banner (Feature 7) -->
+                    <div id="uncertaintyBanner" class="alertBanner alertUncertain" style="display:none;">
+                        <i class="fa-solid fa-triangle-exclamation" style="font-size:18px;"></i>
+                        <div>
+                            <strong data-i18n="uncertainty_heading">⚠️ Low Confidence / Uncertain Result:</strong>
+                            <p id="uncertaintyMessage" style="margin:4px 0 0 0;"></p>
+                        </div>
+                    </div>
+
+                    <!-- Translation Notice Banner (Feature 1) -->
+                    <div id="translationBanner" class="alertBanner alertTranslation" style="display:none;">
+                        <i class="fa-solid fa-language" style="font-size:18px;"></i>
+                        <div>
+                            <strong data-i18n="translation_heading">Hindi to English Translation Applied:</strong>
+                            <p id="translationDetails" style="margin:4px 0 0 0;"></p>
+                        </div>
+                    </div>
+
+                    <!-- Confidence Circle Meter -->
+                    <div class="confidenceCircle">
+                        <svg width="130" height="130">
+                            <circle cx="65" cy="65" r="50" class="circleBackground"></circle>
+                            <circle id="circleProgress" cx="65" cy="65" r="50" class="circleProgress" stroke-dasharray="314" stroke-dashoffset="314"></circle>
+                        </svg>
+                        <div class="circleText">
+                            <span id="confidencePercent">0%</span>
+                        </div>
+                    </div>
+
+                    <div class="confidenceInfo">
+                        <h3 id="confidenceText">Confidence : 0%</h3>
+                        <p style="font-size:12px; color:#8899aa; margin-top:2px;" data-i18n="prob_disclaimer">
+                            Statistical probability based on training vocabulary patterns, not guaranteed factual truth.
+                        </p>
+                    </div>
+
+                    <div class="progressContainer">
+                        <div id="progressBar" class="progressBar"></div>
+                    </div>
+
+                    <!-- Explainable AI Section (Feature 4 & Feature 8) -->
+                    <div id="explanationBox" class="explanationBox">
+                        <h4>
+                            <i class="fa-solid fa-lightbulb"></i>
+                            <span data-i18n="explanation_heading">Model Explanation</span>
+                            <span id="modeBadge" style="font-size:11px; font-weight:normal; opacity:0.8;">(Simple Mode)</span>
+                        </h4>
+                        <p id="explanationSummary" style="font-size:13px; line-height:1.6; margin-bottom:12px;"></p>
+
+                        <div class="wordChipsGroup">
+                            <div class="chipsLabel" data-i18n="words_favoring_real">Words Favoring Real News:</div>
+                            <div id="realChips" class="chipsContainer"></div>
+
+                            <div class="chipsLabel" data-i18n="words_favoring_fake">Words Favoring Fake News:</div>
+                            <div id="fakeChips" class="chipsContainer"></div>
+                        </div>
+
+                        <div id="detailedStatsTable" style="display:none; margin-top:10px;">
+                            <!-- Populated in Detailed Mode -->
+                        </div>
+                    </div>
+
+                    <!-- Source Verification Section (Feature 5) -->
+                    <div id="sourceCard" class="sourceBox" style="display:none;">
+                        <h4>
+                            <i class="fa-solid fa-globe"></i>
+                            <span data-i18n="source_heading">Source Investigation</span>
+                        </h4>
+                        <div id="sourceMetaDetails"></div>
+                        <div style="margin-top:8px;">
+                            <a id="sourceSearchBtn" href="#" target="_blank" rel="noopener noreferrer" class="manualCard" style="display:inline-flex; width:auto; padding:6px 14px;">
+                                <span>Investigate Domain on Google</span>
+                                <i class="fa-solid fa-arrow-up-right-from-square" style="margin-left:8px;"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Fact-Check Results Section (Feature 9) -->
+                    <div id="factCheckSection" class="factCheckBox">
+                        <h4>
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <span data-i18n="factcheck_heading">Related Fact-Check Investigation</span>
+                        </h4>
+                        <p id="factCheckMessage" style="font-size:13px; color:#a0b0cb;"></p>
+                        <div id="factCheckClaimsList"></div>
+
+                        <div style="margin-top:14px;">
+                            <div style="font-size:12px; font-weight:600; color:#94a3b8; margin-bottom:6px;" data-i18n="manual_factcheck_title">
+                                Check Verified Independent Fact-Check Portals:
+                            </div>
+                            <div id="manualLinksGrid" class="manualGrid"></div>
+                        </div>
+                    </div>
+
+                    <!-- User Feedback Section (Feature 6) -->
+                    <div id="feedbackSection" class="feedbackSection">
+                        <div class="feedbackTitle">
+                            <i class="fa-regular fa-comment-dots"></i>
+                            <span data-i18n="feedback_heading">Was this analysis accurate or helpful?</span>
+                        </div>
+                        <div class="feedbackButtons">
+                            <button class="fbBtn" onclick="selectFeedbackSentiment('helpful', this)">
+                                <i class="fa-regular fa-thumbs-up"></i>
+                                <span data-i18n="fb_helpful">Helpful</span>
+                            </button>
+                            <button class="fbBtn" onclick="selectFeedbackSentiment('incorrect', this)">
+                                <i class="fa-regular fa-thumbs-down"></i>
+                                <span data-i18n="fb_incorrect">Seems Incorrect</span>
+                            </button>
+                            <button class="fbBtn" onclick="selectFeedbackSentiment('unsure', this)">
+                                <i class="fa-regular fa-circle-question"></i>
+                                <span data-i18n="fb_unsure">Unsure</span>
+                            </button>
+                        </div>
+                        <textarea id="feedbackComment" class="feedbackComment" placeholder="Optional comments or suggestions (no personal information needed)..." maxlength="500"></textarea>
+                        <button class="subActionBtn" onclick="submitFeedback()">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span data-i18n="btn_submit_feedback">Submit Feedback</span>
+                        </button>
+                        <span id="feedbackStatus" style="font-size:12px; margin-left:12px; color:#00ff88;"></span>
+                    </div>
+
+                    <!-- Share & Download Report Section (Feature 10) -->
+                    <div class="exportSection">
+                        <button class="exportBtn" onclick="downloadReport('html')">
+                            <i class="fa-solid fa-file-code"></i>
+                            <span data-i18n="btn_dl_html">Download HTML Report</span>
+                        </button>
+                        <button class="exportBtn" onclick="downloadReport('txt')">
+                            <i class="fa-solid fa-file-lines"></i>
+                            <span data-i18n="btn_dl_txt">Download TXT Report</span>
+                        </button>
+                        <button class="exportBtn" onclick="shareSummary()">
+                            <i class="fa-solid fa-share-nodes"></i>
+                            <span data-i18n="btn_share">Share / Copy Summary</span>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <h1 data-i18n="section_features_title">Key Capabilities & Features</h1>
+        <div class="cards">
+            <div class="card">
+                <div class="iconBox"><i class="fa-solid fa-brain"></i></div>
+                <h3 data-i18n="feature_1_title">TF-IDF & Logistic Regression</h3>
+                <p data-i18n="feature_1_desc">Trained on thousands of real-world articles for high-speed, lightweight classification with mathematical interpretability.</p>
+            </div>
+            <div class="card">
+                <div class="iconBox"><i class="fa-solid fa-language"></i></div>
+                <h3 data-i18n="feature_2_title">Regional Language Pipeline</h3>
+                <p data-i18n="feature_2_desc">Native Hindi support with automatic language detection, translation safeguards, and transparent processing notification.</p>
+            </div>
+            <div class="card">
+                <div class="iconBox"><i class="fa-solid fa-link"></i></div>
+                <h3 data-i18n="feature_3_title">Safe URL Article Extraction</h3>
+                <p data-i18n="feature_3_desc">Safely extracts text, domain, and publication metadata from news links with SSRF protection and user editing.</p>
+            </div>
+            <div class="card">
+                <div class="iconBox"><i class="fa-solid fa-camera"></i></div>
+                <h3 data-i18n="feature_4_title">Screenshot OCR Analysis</h3>
+                <p data-i18n="feature_4_desc">Extracts text from screenshots with privacy safeguards, immediate temp cleanup, and multilingual OCR capabilities.</p>
+            </div>
+            <div class="card">
+                <div class="iconBox"><i class="fa-solid fa-lightbulb"></i></div>
+                <h3 data-i18n="feature_5_title">Explainable AI (XAI)</h3>
+                <p data-i18n="feature_5_desc">Visualizes influential words favoring real or fake classifications with Simple Language and Detailed statistical modes.</p>
+            </div>
+            <div class="card">
+                <div class="iconBox"><i class="fa-solid fa-magnifying-glass"></i></div>
+                <h3 data-i18n="feature_6_title">Fact-Check Integration</h3>
+                <p data-i18n="feature_6_desc">Connects to Google Fact Check Tools API and certified fact-checking portals for real-world claim verification.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Model Performance / Statistics Section -->
+    <section id="stats" class="stats">
+        <h1 data-i18n="section_stats_title">Model Performance & Architecture</h1>
+        <div class="cards">
+            <div class="stat">
+                <div class="statIcon"><i class="fa-solid fa-bullseye"></i></div>
+                <h2 class="counter" data-target="97.3" data-suffix="%">0%</h2>
+                <p data-i18n="stat_acc">Model Accuracy</p>
+                <div class="stars">★★★★★</div>
+            </div>
+            <div class="stat">
+                <div class="statIcon"><i class="fa-solid fa-gauge-high"></i></div>
+                <h2 class="counter" data-target="0.8" data-suffix=" sec">0 sec</h2>
+                <p data-i18n="stat_speed">Average Inference Time</p>
+            </div>
+            <div class="stat">
+                <div class="statIcon"><i class="fa-solid fa-newspaper"></i></div>
+                <h2 class="counter" data-target="6000" data-suffix="+">0+</h2>
+                <p data-i18n="stat_articles">Balanced Training Articles</p>
+            </div>
+            <div class="stat">
+                <div class="statIcon"><i class="fa-solid fa-microchip"></i></div>
+                <h2>Logistic Regression</h2>
+                <p>TF-IDF 20,000 N-Grams</p>
+                <span class="version">Scikit-Learn Pipeline</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- History Section -->
+    <section id="history" class="history">
+        <div class="historyHeader">
+            <h1>
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span data-i18n="history_heading">Recent Predictions</span>
+            </h1>
+            <button onclick="clearHistory()">
+                <i class="fa-solid fa-trash"></i>
+                <span data-i18n="btn_clear_history">Clear History</span>
+            </button>
+        </div>
+        <div id="historyList">
+            <div class="historyEmpty" data-i18n="history_empty">No predictions yet.</div>
+        </div>
+    </section>
+
+    <!-- Footer Section -->
+    <footer id="about">
+        <div class="footerContent">
+            <h2>FakeNews <span>AI</span></h2>
+            <p class="footerDesc" data-i18n="footer_desc">
+                An academic Human–Computer Interaction (HCI) project combining machine learning, natural language processing,
+                explainable AI, and fact-checking interfaces to empower informed digital reading.
+            </p>
+
+            <div class="techStack">
+                <span>TF-IDF</span>
+                <span>Logistic Regression</span>
+                <span>Flask</span>
+                <span>Python</span>
+                <span>NLTK</span>
+                <span>Scikit-Learn</span>
+                <span>BeautifulSoup4</span>
+                <span>Tesseract OCR</span>
+                <span>Google Fact Check</span>
+                <span>SQLite</span>
+            </div>
+
+            <p class="copyright">
+                FakeNews AI • Academic Human-Computer Interaction Demonstration • Built with Flask & Scikit-Learn
+            </p>
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+
+    <!-- Keyboard Shortcuts Modal (Shneiderman Rule 2, 7 & 8) -->
+    <div id="shortcutsModal" class="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="shortcutsModalTitle" style="display:none;" onclick="if(event.target===this) toggleShortcutsModal()">
+        <div class="modalCard glass">
+            <div class="modalHeader">
+                <h3 id="shortcutsModalTitle"><i class="fa-solid fa-keyboard"></i> Keyboard Shortcuts</h3>
+                <button class="modalCloseBtn" onclick="toggleShortcutsModal()" aria-label="Close shortcuts dialog">&times;</button>
+            </div>
+            <div class="shortcutsTableWrapper">
+                <table class="shortcutsTable">
+                    <tbody>
+                        <tr><td><kbd>Ctrl</kbd> + <kbd>Enter</kbd></td><td>Analyze News article</td></tr>
+                        <tr><td><kbd>Esc</kbd></td><td>Clear inputs & reset card</td></tr>
+                        <tr><td><kbd>Ctrl</kbd> + <kbd>Z</kbd></td><td>Undo accidental clear (when not typing)</td></tr>
+                        <tr><td><kbd>Alt</kbd> + <kbd>1</kbd></td><td>Switch to Direct Text tab</td></tr>
+                        <tr><td><kbd>Alt</kbd> + <kbd>2</kbd></td><td>Switch to News URL tab</td></tr>
+                        <tr><td><kbd>Alt</kbd> + <kbd>3</kbd></td><td>Switch to Screenshot OCR tab</td></tr>
+                        <tr><td><kbd>Alt</kbd> + <kbd>L</kbd></td><td>Switch language (English / हिन्दी)</td></tr>
+                        <tr><td><kbd>Alt</kbd> + <kbd>M</kbd></td><td>Toggle Simple / Detailed explanation mode</td></tr>
+                        <tr><td><kbd>Alt</kbd> + <kbd>T</kbd></td><td>Toggle Dark / Light theme</td></tr>
+                        <tr><td><kbd>?</kbd></td><td>Toggle this keyboard shortcuts guide</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="modalTip"><i class="fa-solid fa-circle-info"></i> All shortcuts operate safely without interfering with normal text editing.</p>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+flask
+pandas
+numpy
+scikit-learn
+nltk
+joblib
+beautifulsoup4
+requests
+deep-translator
+Pillow
+pytesseract
+winocr
+pytest
+python-dotenv
